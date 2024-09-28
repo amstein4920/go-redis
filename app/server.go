@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 )
 
 // Ensures gofmt doesn't remove the "net" and "os" imports in stage 1 (feel free to remove this!)
@@ -22,26 +23,30 @@ func main() {
 		os.Exit(1)
 	}
 	defer l.Close()
-
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+		handleConn(conn)
 	}
-	handleConn(conn)
-	fmt.Println(conn)
 }
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
-	readBuffer := make([]byte, 1024)
-	_, err := conn.Read(readBuffer)
-	if err != nil {
-		fmt.Println("Error reading data from connection: ", err.Error())
-		os.Exit(1)
-	}
-	_, err = conn.Write([]byte("+PONG\r\n"))
-	if err != nil {
-		fmt.Println("Error writing PONG back  to client: ", err.Error())
+	conn.SetDeadline(time.Now().Add(time.Second))
+	for {
+		readBuffer := make([]byte, 1024)
+		_, err := conn.Read(readBuffer)
+		if err != nil {
+			fmt.Println("Error reading data from connection: ", err.Error())
+			os.Exit(1)
+		}
+		_, err = conn.Write([]byte("+PONG\r\n"))
+		if err != nil {
+			fmt.Println("Error writing PONG back  to client: ", err.Error())
+		}
+		conn.SetDeadline(time.Now().Add(time.Second))
 	}
 }
