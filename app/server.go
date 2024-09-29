@@ -1,51 +1,82 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
-	"time"
+	"strconv"
+	"strings"
 )
 
 func main() {
-	fmt.Println("Logs from your program will appear here!")
-
-	l, err := net.Listen("tcp", "0.0.0.0:6379")
+	listener, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
-	defer l.Close()
-	for {
-		go createConn(l)
-	}
-}
+	fmt.Println("Listening on: ", listener.Addr().String())
 
-func createConn(l net.Listener) {
-	for {
-		conn, err := l.Accept()
+	for id := 1; ; id++ {
+		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		handleConn(conn)
+		go serveClient(id, conn)
 	}
 }
 
-func handleConn(conn net.Conn) {
+func serveClient(id int, conn net.Conn) {
 	defer conn.Close()
-	conn.SetDeadline(time.Now().Add(time.Second))
 	for {
-		readBuffer := make([]byte, 1024)
-		_, err := conn.Read(readBuffer)
-		if err != nil {
-			fmt.Println("Error reading data from connection: ", err.Error())
-			os.Exit(1)
+		scanner := bufio.NewScanner(conn)
+
+		commands := []string{}
+		var arrSize, strSize int
+		for scanner.Scan() {
+			token := scanner.Text()
+			switch token[0] {
+			case '*':
+				arrSize, _ = strconv.Atoi(token[1:])
+			case '$':
+				strSize, _ = strconv.Atoi(token[1:])
+			default:
+				if len(token) != strSize {
+					fmt.Println("Improper string size")
+					break
+				}
+				arrSize--
+				strSize = 0
+				fmt.Println(token)
+				commands = append(commands, token)
+			}
+			if arrSize == 0 {
+				break
+			}
 		}
-		_, err = conn.Write([]byte("+PONG\r\n"))
-		if err != nil {
-			fmt.Println("Error writing PONG back  to client: ", err.Error())
+		if len(commands) == 0 {
+			break
 		}
-		conn.SetDeadline(time.Now().Add(time.Second))
+
+		for _, command := range commands {
+			fmt.Println(command)
+		}
+
+		var response string
+		switch strings.ToUpper(commands[0]) {
+		case "PING":
+			response = "+PONG\r\n"
+		case "ECHO":
+			response = fmt.Sprintf("$%v\r\n%v\r\n", len(commands[1]), commands[1])
+		}
+
+		_, err := conn.Write([]byte(response))
+		if err != nil {
+			fmt.Printf("[#%d] Error writing response: %v\n", id, err.Error())
+			break
+		}
 	}
+
+	fmt.Printf("[#%d] Client closing\n", id)
 }
