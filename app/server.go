@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func main() {
@@ -29,7 +28,7 @@ func main() {
 
 func serveClient(id int, conn net.Conn) {
 	defer conn.Close()
-	valuesMap := make(map[string]string)
+	savedDataMap := make(map[string]SavedData)
 	for {
 		scanner := bufio.NewScanner(conn)
 
@@ -60,23 +59,7 @@ func serveClient(id int, conn net.Conn) {
 			break
 		}
 
-		var response string
-		switch strings.ToUpper(commands[0]) {
-		case "PING":
-			response = "+PONG\r\n"
-		case "ECHO":
-			response = fmt.Sprintf("$%v\r\n%v\r\n", len(commands[1]), commands[1])
-		case "SET":
-			valuesMap[commands[1]] = commands[2]
-			response = "+OK\r\n"
-		case "GET":
-			valueForKey := valuesMap[commands[1]]
-			if valueForKey != "" {
-				response = fmt.Sprintf("$%v\r\n%v\r\n", len(valueForKey), valueForKey)
-			} else {
-				response = "$-1\r\n"
-			}
-		}
+		response := CommandsSwitch(commands, savedDataMap)
 
 		_, err := conn.Write([]byte(response))
 		if err != nil {
