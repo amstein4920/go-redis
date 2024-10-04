@@ -29,6 +29,7 @@ func main() {
 
 func serveClient(id int, conn net.Conn) {
 	defer conn.Close()
+	valuesMap := make(map[string]string)
 	for {
 		scanner := bufio.NewScanner(conn)
 
@@ -59,16 +60,22 @@ func serveClient(id int, conn net.Conn) {
 			break
 		}
 
-		for _, command := range commands {
-			fmt.Println(command)
-		}
-
 		var response string
 		switch strings.ToUpper(commands[0]) {
 		case "PING":
 			response = "+PONG\r\n"
 		case "ECHO":
 			response = fmt.Sprintf("$%v\r\n%v\r\n", len(commands[1]), commands[1])
+		case "SET":
+			valuesMap[commands[1]] = commands[2]
+			response = "+OK\r\n"
+		case "GET":
+			valueForKey := valuesMap[commands[1]]
+			if valueForKey != "" {
+				response = fmt.Sprintf("$%v\r\n%v\r\n", len(valueForKey), valueForKey)
+			} else {
+				response = "$-1\r\n"
+			}
 		}
 
 		_, err := conn.Write([]byte(response))
