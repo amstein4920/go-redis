@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,11 @@ type SavedData struct {
 	savedTime time.Time
 }
 
-func CommandsSwitch(commands []string, savedDataMap map[string]SavedData) string {
+type ReplicationData struct {
+	role string
+}
+
+func CommandsSwitch(commands []string, savedDataMap map[string]SavedData, replicationData ReplicationData) string {
 	switch strings.ToUpper(commands[0]) {
 	case "PING":
 		return "+PONG\r\n"
@@ -23,6 +28,8 @@ func CommandsSwitch(commands []string, savedDataMap map[string]SavedData) string
 		return setCommand(commands, savedDataMap)
 	case "GET":
 		return getCommand(commands, savedDataMap)
+	case "INFO":
+		return infoCommand(commands, replicationData)
 	}
 	return "$-1\r\n"
 }
@@ -60,6 +67,21 @@ func getCommand(commands []string, savedDataMap map[string]SavedData) string {
 	}
 	if *savedDataForKey.expirary > time.Since(savedDataForKey.savedTime).Milliseconds() {
 		return fmt.Sprintf("$%v\r\n%v\r\n", len(savedDataForKey.value), savedDataForKey.value)
+	}
+	return "$-1\r\n"
+}
+
+func infoCommand(commands []string, replicationData ReplicationData) string {
+	switch commands[1] {
+	case "replication":
+		dataString := ""
+
+		rdReflection := reflect.ValueOf(replicationData)
+		typeOfRD := rdReflection.Type()
+		for i := 0; i < rdReflection.NumField(); i++ {
+			dataString = strings.Join([]string{dataString, typeOfRD.Field(i).Name + ":" + rdReflection.Field(i).Interface().(string)}, " ")
+		}
+		return fmt.Sprintf("$%v\r\n%v\r\n", len(dataString), dataString)
 	}
 	return "$-1\r\n"
 }
