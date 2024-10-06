@@ -69,7 +69,11 @@ func serveClient(id int, conn net.Conn) {
 			break
 		}
 
-		response := CommandsSwitch(commands, savedDataMap)
+		replicationData := ReplicationData{
+			Role: "master",
+		}
+
+		response := CommandsSwitch(commands, savedDataMap, replicationData)
 
 		_, err := conn.Write([]byte(response))
 		if err != nil {
