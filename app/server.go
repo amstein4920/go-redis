@@ -2,13 +2,22 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strconv"
 )
 
+var portFlag *int
+
+func init() {
+	portFlag = flag.Int("port", 6379, "port value")
+}
+
 func main() {
+	flag.Parse()
+	fmt.Printf("Port: %v", *portFlag)
 	listener, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
