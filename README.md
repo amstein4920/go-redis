@@ -1,33 +1,3 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/e0ba2b8c-7073-418d-a6f3-a4686875309a)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+An ongoing project to follow the steps set by CodeCrafters to create a Redis clone in Go. The service essentially provides the requirements and the test suite, code is not written by anybody other than me.
 
-This is a starting point for Go solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
-
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
-
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
-
-# Passing the first stage
-
-The entry point for your Redis implementation is in `app/server.go`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
-
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
-
-That's all!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `go (1.19)` installed locally
-1. Run `./your_program.sh` to run your Redis server, which is implemented in
-   `app/server.go`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+This is my first "substantial" project and Go and is serves no practical purpose beyond my own education. Nevertheless, it is indicative of the current quality of my coding in Go specifically.
