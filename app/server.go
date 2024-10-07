@@ -10,11 +10,11 @@ import (
 )
 
 var portFlag *int
-var replicaFlag *bool
+var replicaFlag *string
 
 func init() {
-	portFlag = flag.Int("port", 6379, "port value")
-	replicaFlag = flag.Bool("replicaof", false, "is replica flag")
+	portFlag = flag.Int("port", 6379, "port for connection")
+	replicaFlag = flag.String("replicaof", "", "leader server to replicate")
 }
 
 func main() {
@@ -86,10 +86,11 @@ func serveClient(id int, conn net.Conn) {
 
 func setReplicationData() ReplicationData {
 	roleString := "master"
-	if *replicaFlag {
+	if *replicaFlag != "" {
 		roleString = "slave"
 	}
 
+	//Calculation comes later, currently there is no ability to actually link to
 	replicationOffset := strconv.FormatInt(0, 10)
 
 	return ReplicationData{
