@@ -28,6 +28,17 @@ func main() {
 	}
 	fmt.Println("Listening on: ", listener.Addr().String())
 
+	if *replicaFlag != "" {
+		leaderConn, err := net.Dial("tcp", *replicaFlag)
+		if err != nil {
+			fmt.Println("Failed to connected to leader/master server")
+			os.Exit(1)
+		}
+		defer leaderConn.Close()
+
+		fmt.Fprint(leaderConn, "*1\r\n$4\r\nPING\r\n")
+	}
+
 	for id := 1; ; id++ {
 		conn, err := listener.Accept()
 		if err != nil {
