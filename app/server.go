@@ -22,22 +22,7 @@ func main() {
 	flag.Parse()
 
 	if *replicaFlag != "" {
-		leaderAddress := strings.Split(*replicaFlag, " ")
-
-		port, err := strconv.Atoi(leaderAddress[1])
-		if err != nil {
-			fmt.Println("Invalid leader/master port provided")
-			os.Exit(1)
-		}
-
-		address := fmt.Sprintf("%s:%d", leaderAddress[0], port)
-		leaderConn, err := net.Dial("tcp", address)
-		if err != nil {
-			fmt.Println("Failed to connected to leader/master server")
-			os.Exit(1)
-		}
-
-		fmt.Fprint(leaderConn, "*1\r\n$4\r\nPING\r\n")
+		processReplicaConnection()
 	}
 
 	address := fmt.Sprintf("0.0.0.0:%v", *portFlag)
@@ -117,5 +102,29 @@ func setReplicationData() ReplicationData {
 		Role:               roleString,
 		Master_replid:      "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb",
 		Master_repl_offset: replicationOffset,
+	}
+}
+
+func processReplicaConnection() {
+	leaderAddress := strings.Split(*replicaFlag, " ")
+	response := make([]byte, 1024)
+
+	port, err := strconv.Atoi(leaderAddress[1])
+	if err != nil {
+		fmt.Println("Invalid leader/master port provided")
+		os.Exit(1)
+	}
+
+	address := fmt.Sprintf("%s:%d", leaderAddress[0], port)
+	leaderConn, err := net.Dial("tcp", address)
+	if err != nil {
+		fmt.Println("Failed to connected to leader/master server")
+		os.Exit(1)
+	}
+
+	fmt.Fprint(leaderConn, "*1\r\n$4\r\nPING\r\n")
+	bufio.NewReader(leaderConn).Read(response)
+	if string(response) == "+PONG" {
+		fmt.Fprintf(leaderConn, "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n%d\r\n", port)
 	}
 }
