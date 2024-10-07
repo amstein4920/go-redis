@@ -60,7 +60,6 @@ func serveClient(id int, conn net.Conn) {
 				}
 				arrSize--
 				strSize = 0
-				fmt.Println(token)
 				commands = append(commands, token)
 			}
 			if arrSize == 0 {
@@ -91,7 +90,11 @@ func setReplicationData() ReplicationData {
 		roleString = "slave"
 	}
 
+	replicationOffset := strconv.FormatInt(0, 10)
+
 	return ReplicationData{
-		Role: roleString,
+		Role:               roleString,
+		Master_replid:      "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb",
+		Master_repl_offset: replicationOffset,
 	}
 }
