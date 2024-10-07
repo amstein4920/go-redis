@@ -10,9 +10,11 @@ import (
 )
 
 var portFlag *int
+var replicaFlag *bool
 
 func init() {
 	portFlag = flag.Int("port", 6379, "port value")
+	replicaFlag = flag.Bool("replicaof", false, "is replica flag")
 }
 
 func main() {
@@ -69,9 +71,7 @@ func serveClient(id int, conn net.Conn) {
 			break
 		}
 
-		replicationData := ReplicationData{
-			Role: "master",
-		}
+		replicationData := setReplicationData()
 
 		response := CommandsSwitch(commands, savedDataMap, replicationData)
 
@@ -82,5 +82,16 @@ func serveClient(id int, conn net.Conn) {
 		}
 	}
 
-	fmt.Printf("[#%d] Client closing\n", id)
+	fmt.Printf("#%d Client closing\n", id)
+}
+
+func setReplicationData() ReplicationData {
+	roleString := "master"
+	if *replicaFlag {
+		roleString = "slave"
+	}
+
+	return ReplicationData{
+		Role: roleString,
+	}
 }
