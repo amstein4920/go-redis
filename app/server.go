@@ -28,17 +28,26 @@ func main() {
 	}
 	fmt.Println("Listening on: ", listener.Addr().String())
 
+	leaderConn, err := net.Dial("tcp", *replicaFlag)
+	if err != nil {
+		fmt.Println("Failed to connected to leader/master server")
+		os.Exit(1)
+	}
+
+	fmt.Fprint(leaderConn, "*1\r\n$4\r\nPING\r\n")
+
 	for id := 1; ; id++ {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		go serveClient(id, conn)
+		go serveClient(id, conn, leaderConn)
 	}
 }
 
-func serveClient(id int, conn net.Conn) {
+func serveClient(id int, conn net.Conn, leaderConn net.Conn) {
+	defer leaderConn.Close()
 	defer conn.Close()
 	savedDataMap := make(map[string]SavedData)
 	for {
