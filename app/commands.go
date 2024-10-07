@@ -14,8 +14,11 @@ type SavedData struct {
 	savedTime time.Time
 }
 
+// Format of field names nonstandard so as to easily match what the Redis protocol specifies
 type ReplicationData struct {
-	Role string
+	Role               string
+	Master_replid      string
+	Master_repl_offset int
 }
 
 func CommandsSwitch(commands []string, savedDataMap map[string]SavedData, replicationData ReplicationData) string {
