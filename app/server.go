@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -105,7 +106,7 @@ func setReplicationData() ReplicationData {
 	}
 }
 
-func processReplicaConnection() {
+func processReplicaConnection() error {
 	leaderAddress := strings.Split(*replicaFlag, " ")
 	response := make([]byte, 1024)
 
@@ -123,10 +124,17 @@ func processReplicaConnection() {
 	}
 
 	fmt.Fprint(leaderConn, "*1\r\n$4\r\nPING\r\n")
-	bufio.NewReader(leaderConn).Read(response)
+	reader := bufio.NewReader(leaderConn)
+	reader.Read(response)
 	fmt.Println(string(response))
-	if string(response) != "" {
-		fmt.Fprintf(leaderConn, "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n%d\r\n", *portFlag)
-		fmt.Fprint(leaderConn, "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n")
+	if string(response) == "" {
+		return errors.New("no response from leader/master")
 	}
+	clear(response)
+	fmt.Fprintf(leaderConn, "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n%d\r\n", *portFlag)
+	fmt.Fprint(leaderConn, "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n")
+	reader.Read(response)
+	fmt.Println(string(response))
+
+	return nil
 }
