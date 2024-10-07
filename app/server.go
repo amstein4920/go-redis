@@ -20,6 +20,16 @@ func init() {
 func main() {
 	flag.Parse()
 
+	if *replicaFlag != "" {
+		leaderConn, err := net.Dial("tcp", *replicaFlag)
+		if err != nil {
+			fmt.Println("Failed to connected to leader/master server")
+			os.Exit(1)
+		}
+
+		fmt.Fprint(leaderConn, "*1\r\n$4\r\nPING\r\n")
+	}
+
 	address := fmt.Sprintf("0.0.0.0:%v", *portFlag)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
